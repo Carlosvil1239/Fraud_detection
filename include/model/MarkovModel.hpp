@@ -1,13 +1,34 @@
 //
-// Created by Carlos Villacañas Iglesias.
+// Created by Carlos Villacañas.
 //
 
 #pragma once
 
+#include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <unordered_map>
 #include <stdexcept>
+
+namespace fd::model {
+
+struct TransparentStringHash {
+    using is_transparent = void;
+    std::size_t operator()(std::string_view sv) const noexcept {
+        return std::hash<std::string_view>{}(sv);
+    }
+    std::size_t operator()(const std::string& s) const noexcept {
+        return std::hash<std::string_view>{}(s);
+    }
+};
+
+struct TransparentStringEq {
+    using is_transparent = void;
+    bool operator()(std::string_view a, std::string_view b) const noexcept {
+        return a == b;
+    }
+};
 
 class MarkovModel {
 public:
@@ -30,13 +51,19 @@ public:
 
     const std::vector<std::string>& states() const { return states_; }
 
-
-
-    // Returns pointer to index if exists, nullptr otherwise.
-    const std::size_t* stateIndexPtr(const std::string& s) const {
+    // Returns the index of a state, throws if not found.
+    std::size_t state_index_or_throw(std::string_view s) const {
         auto it = index_.find(s);
-        if (it == index_.end()) return nullptr;
-        return &it->second;
+        if (it == index_.end()) {
+            throw std::runtime_error(std::string("Unknown state: ") + std::string(s));
+        }
+        return it->second;
+    }
+
+    std::optional<std::size_t> state_index(std::string_view s) const {
+        auto it = index_.find(s);
+        if (it == index_.end()) return std::nullopt;
+        return it->second;
     }
 
     // Row-major access: P(i,j)
@@ -48,5 +75,7 @@ public:
 private:
     std::vector<std::string> states_;
     std::vector<double> p_; // row-major n*n
-    std::unordered_map<std::string, std::size_t> index_;
+    std::unordered_map<std::string, std::size_t, TransparentStringHash, TransparentStringEq> index_;
 };
+
+}

@@ -1,5 +1,5 @@
 //
-// Created by Carlos Villacañas Iglesias.
+// Created by Carlos Villacañas.
 //
 #include "../../include/io/ModelReader.hpp"
 
@@ -23,17 +23,19 @@ static std::vector<std::string> split_csv_simple(const std::string& line) {
     return out;
 }
 
-MarkovModel ModelReader::read_model_txt(const std::string& path) {
-    std::ifstream in(path);
-    if (!in) throw std::runtime_error("Cannot open model file: " + path);
+namespace fd::io {
+
+fd::model::MarkovModel read_model_txt(std::string_view path) {
+    std::ifstream in{std::string(path)};
+    if (!in) throw std::runtime_error(std::string("Cannot open model file: ") + std::string(path));
 
     std::string first;
     if (!std::getline(in, first) || first.empty())
-        throw std::runtime_error("Model file has empty first line: " + path);
+        throw std::runtime_error(std::string("Model file has empty first line: ") + std::string(path));
 
     std::vector<std::string> states = split_csv_simple(first);
     const std::size_t n = states.size();
-    if (n == 0) throw std::runtime_error("No states found in model file: " + path);
+    if (n == 0) throw std::runtime_error(std::string("No states found in model file: ") + std::string(path));
 
     std::vector<double> probs;
     probs.reserve(n * n);
@@ -56,5 +58,7 @@ MarkovModel ModelReader::read_model_txt(const std::string& path) {
         throw std::runtime_error("Model file has wrong number of rows (expected n).");
     }
 
-    return MarkovModel(std::move(states), std::move(probs));
+    return {std::move(states), std::move(probs)};
+}
+
 }

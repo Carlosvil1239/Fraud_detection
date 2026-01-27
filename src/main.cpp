@@ -1,6 +1,7 @@
 //
-// Created by Carlos Villacañas Iglesias.
+// Created by Carlos Villacañas.
 //
+
 #include <iostream>
 #include <string>
 #include <stdexcept>
@@ -18,14 +19,15 @@ struct AppConfig {
 
     std::size_t window = 5;
     double threshold = 0.96;
+    fd::model::ScoreType score_type = fd::model::ScoreType::MISS_PROBABILITY;
 };
 
 static void usage(const char* prog) {
     std::cerr
             << "Usage:\n"
             << "  " << prog << " --input <credit-card.dat> --model <model.txt>\n"
-            << "           [--window 5] [--statepos 1] [--threshold 0.96]\n"
-            << "           [--score miss_prob|miss_rate]\n";
+            << "           [--window 5] [--threshold 0.96]\n";
+
 }
 
 static AppConfig parse_args(int argc, char** argv) {
@@ -51,6 +53,11 @@ static AppConfig parse_args(int argc, char** argv) {
 
         } else if (a == "--threshold") {
             c.threshold = std::stod(need(a));
+        } else if (a == "--score") {
+            const std::string v = need(a);
+            if (v == "miss_prob") c.score_type = fd::model::ScoreType::MISS_PROBABILITY;
+            else if (v == "miss_rate") c.score_type = fd::model::ScoreType::MISS_RATE;
+            else throw std::runtime_error("Unknown --score value: " + v);
         } else {
             throw std::runtime_error("Unknown argument: " + a);
         }
@@ -63,21 +70,21 @@ int main(int argc, char** argv) {
     try {
         const AppConfig cfg = parse_args(argc, argv);
 
-        MarkovModel model = ModelReader::read_model_txt(cfg.model_path);
-        auto data = DatasetReader::read_credit_card_dataset(cfg.input_path);
+        fd::model::MarkovModel model = fd::io::read_model_txt(cfg.model_path);
+        auto data = fd::io::read_credit_card_dataset(cfg.input_path);
 
+        constexpr int kStatePos = 1; // dataset format: id, something, STATE
+        fd::pipeline::MarkovPredictor predictor(model, cfg.window, kStatePos, cfg.score_type, cfg.threshold);
 
-        MarkovPredictor predictor(model, cfg.window, cfg.threshold);
-
-        Sink sink;
+        fd::pipeline::Sink sink;
 
         std::size_t total = 0;
 
         for (const auto& r : data) {
-            Event e;
+            fd::pipeline::Event e;
             e.key = r.key;
             e.record = r.record;
-            e.ts_ns = now_ns();
+            e.ts_ns = fd::util::now_ns();
 
             total++;
             if (predictor.process(e)) {

@@ -1,22 +1,21 @@
 //
-// Created by Carlos Villacañas Iglesias.
+// Created by Carlos Villacañas.
 //
 
 #pragma once
 
-#include <string>
-#include <vector>
 #include <cstddef>
+#include <string>
+#include <string_view>
+#include <vector>
+
+namespace fd::io {
 
 struct RawRecord {
-    std::size_t key;      // numeric key derived from entity_id
-    std::string record;   // everything after the first comma
+    std::size_t key;
+    std::string record;
 };
 
-class DatasetReader {
-public:
-    // Reads credit-card.dat:
-    // line = "<entity_id>,<record...>"
-    // key is assigned by mapping entity_id -> 0...N-1
-    static std::vector<RawRecord> read_credit_card_dataset(const std::string& path);
-};
+std::vector<RawRecord> read_credit_card_dataset(std::string_view path);
+
+}

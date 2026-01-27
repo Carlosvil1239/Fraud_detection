@@ -1,15 +1,16 @@
 //
-// Created by Carlos Villacañas Iglesias.
+// Created by Carlos Villacañas.
 //
 #include "../../include/training/MarkovTrainer.hpp"
-
+#include "../../include/training/StateExtractor.hpp"
 
 #include <fstream>
 #include <unordered_map>
 #include <stdexcept>
 #include <cstdint>
 
-// Dynamic state table used during training.
+namespace {
+
 struct StateTable {
     std::vector<std::string> states;
     std::unordered_map<std::string, std::size_t> index;
@@ -24,16 +25,20 @@ struct StateTable {
     }
 };
 
-MarkovModel MarkovTrainer::train_from_dataset(
-        const std::string& dataset_path,
+}
+namespace fd::training {
+
+fd::model::MarkovModel train_from_dataset(
+        std::string_view dataset_path,
+        int state_position,
         const TrainingOptions& opt,
         TrainingReport* out_report
 ) {
     TrainingReport rep;
 
-    std::ifstream in(dataset_path);
+    std::ifstream in{std::string(dataset_path)};
     if (!in) {
-        throw std::runtime_error("Cannot open dataset file: " + dataset_path);
+        throw std::runtime_error(std::string("Cannot open dataset file: ") + std::string(dataset_path));
     }
 
     StateTable table;
@@ -53,14 +58,11 @@ MarkovModel MarkovTrainer::train_from_dataset(
         const std::size_t first_comma = line.find(',');
         if (first_comma == std::string::npos) continue;
 
-        const std::size_t last_comma = line.rfind(',');
-        if (last_comma == std::string::npos || last_comma <= first_comma) continue;
-
         const std::string entity_id = line.substr(0, first_comma);
-        const std::string state     = line.substr(last_comma + 1); // "MNL"
+        const std::string record    = line.substr(first_comma + 1);
 
+        const std::string state = fd::training::extract_state_from_record(record, state_position);
         if (state.empty()) continue;
-
 
         // Map state -> index (dynamic: add if new).
         const std::size_t old_n = table.states.size();
@@ -132,5 +134,7 @@ MarkovModel MarkovTrainer::train_from_dataset(
     }
 
     if (out_report) *out_report = rep;
-    return {table.states, probs};
+    return fd::model::MarkovModel(table.states, probs);
+}
+
 }

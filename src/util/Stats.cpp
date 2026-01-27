@@ -1,5 +1,5 @@
 //
-// Created by Carlos on 15/12/2025.
+// Created by Carlos Villacañas.
 //
 
 #include "../../include/util/Stats.hpp"
@@ -16,6 +16,8 @@ static double percentile_sorted_ms(const std::vector<std::uint64_t>& sorted_ns, 
     return static_cast<double>(ns) / 1e6;
 }
 
+namespace fd::util {
+
 LatencyStats compute_latency_stats_ms(std::vector<std::uint64_t> latencies_ns) {
     LatencyStats s;
     if (latencies_ns.empty()) return s;
@@ -28,4 +30,6 @@ LatencyStats compute_latency_stats_ms(std::vector<std::uint64_t> latencies_ns) {
     s.p95_ms = percentile_sorted_ms(latencies_ns, 95.0);
     s.p99_ms = percentile_sorted_ms(latencies_ns, 99.0);
     return s;
+}
+
 }

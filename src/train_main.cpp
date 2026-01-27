@@ -1,5 +1,5 @@
 //
-// Created by Carlos Villacañas Iglesias.
+// Created by Carlos Villacañas.
 //
 #include <iostream>
 #include <fstream>
@@ -69,20 +69,20 @@ int main(int argc, char** argv) {
             return 1;
         }
 
-        TrainingOptions opt;
+        fd::training::TrainingOptions opt;
         opt.alpha = alpha;
         opt.uniform_if_dead_end = uniform_dead_end;
 
 
 
-        TrainingReport rep;
-        MarkovModel model = MarkovTrainer::train_from_dataset(input_path, opt, &rep);
+        fd::training::TrainingReport rep;
+        fd::model::MarkovModel model = fd::training::train_from_dataset(input_path, kStatePos, opt, &rep);
 
         std::ofstream out(output_path);
         if (!out) {
             throw std::runtime_error("Cannot open output file: " + output_path);
         }
-        write_model_txt(out, model);
+        fd::io::write_model_txt(out, model);
 
         // Simple training summary
         std::cout << "Training done.\n";

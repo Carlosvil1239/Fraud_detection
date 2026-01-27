@@ -1,5 +1,5 @@
 //
-// Created by Carlos Villacañas Iglesias.
+// Created by Carlos Villacañas.
 //
 
 #pragma once
@@ -11,7 +11,9 @@
 // Writes a Markov model in the same CSV format used by model.txt:
 // first line: state names separated by commas
 // next lines: rows of probabilities separated by commas
-inline void write_model_txt(std::ostream& out, const MarkovModel& model) {
+namespace fd::io {
+
+inline void write_model_txt(std::ostream& out, const fd::model::MarkovModel& model) {
     const auto& states = model.states();
     const std::size_t n = model.size();
 
@@ -29,4 +31,6 @@ inline void write_model_txt(std::ostream& out, const MarkovModel& model) {
         }
         out << "\n";
     }
+}
+
 }

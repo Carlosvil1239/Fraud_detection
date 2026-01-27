@@ -1,16 +1,15 @@
 //
-// Created by Carlos Villacañas Iglesias.
+// Created by Carlos Villacañas.
 //
 
 #pragma once
 
-#include <string>
+#include <string_view>
+
 #include "../model/MarkovModel.hpp"
 
-class ModelReader {
-public:
-    // Reads the same format as model.txt:
-    // first line: comma-separated state names
-    // next lines: rows of probabilities (comma-separated)
-    static MarkovModel read_model_txt(const std::string& path);
-};
+namespace fd::io {
+
+fd::model::MarkovModel read_model_txt(std::string_view path);
+
+}

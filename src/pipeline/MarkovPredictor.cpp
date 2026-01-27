@@ -1,14 +1,20 @@
 //
-// Created by Carlos Villacañas Iglesias.
+// Created by Carlos Villacañas.
 //
 #include "../../include/pipeline/MarkovPredictor.hpp"
+#include "../../include/training/StateExtractor.hpp" // reuse extractor
 
+namespace fd::pipeline {
 
-MarkovPredictor::MarkovPredictor(const MarkovModel& model,
+MarkovPredictor::MarkovPredictor(const fd::model::MarkovModel& model,
                                  std::size_t window_size,
+                                 int state_position,
+                                 fd::model::ScoreType score_type,
                                  double threshold)
         : model_(model),
           W_(window_size),
+          statepos_(state_position),
+          type_(score_type),
           threshold_(threshold)
 {
     windows_.reserve(1 << 16);
@@ -20,22 +26,16 @@ bool MarkovPredictor::build_state_sequence(const std::deque<std::string>& recs,
     out_idx.reserve(recs.size());
 
     for (const auto& r : recs) {
-
-        const std::size_t last_comma = r.rfind(',');
-        if (last_comma == std::string::npos) return false;
-
-        const std::string st = r.substr(last_comma + 1);
+        const std::string st = fd::training::extract_state_from_record(r, statepos_);
         if (st.empty()) return false;
 
-        const std::size_t* p = model_.stateIndexPtr(st);
-        if (!p) return false;
+        const auto idx = model_.state_index(st);
+        if (!idx) return false;
 
-        out_idx.push_back(*p);
+        out_idx.push_back(*idx);
     }
-
     return out_idx.size() >= 2;
 }
-
 
 bool MarkovPredictor::process(Event& e) {
     stats_.events++;
@@ -54,11 +54,13 @@ bool MarkovPredictor::process(Event& e) {
         return false;
     }
 
-    e.score = OutlierScorer::score_sequence(model_, seq);
+    e.score = fd::model::score_sequence(model_, seq, type_);
     stats_.scored++;
     stats_.sum_score += e.score;
     if (e.score > stats_.max_score) stats_.max_score = e.score;
 
     return e.score > threshold_;
+}
+
 }
 

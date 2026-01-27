@@ -1,5 +1,5 @@
 //
-// Created by Carlos Villacañas Iglesias.
+// Created by Carlos Villacañas.
 //
 
 #pragma once
@@ -11,6 +11,8 @@
 #include "Event.hpp"
 #include "../util/Stats.hpp"
 
+namespace fd::pipeline {
+
 class Sink {
 public:
     Sink() = default;
@@ -18,9 +20,11 @@ public:
     void consume(const Event& e);
 
     [[nodiscard]] std::size_t outliers() const { return outliers_; }
-    [[nodiscard]] LatencyStats final_stats_ms() const;
+    [[nodiscard]] fd::util::LatencyStats final_stats_ms() const;
 
 private:
     std::size_t outliers_ = 0;
     std::vector<std::uint64_t> latencies_;
 };
+
+}

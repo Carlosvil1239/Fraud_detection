@@ -1,5 +1,5 @@
 //
-// Created by Carlos Villacañas Iglesias.
+// Created by Carlos Villacañas.
 //
 #include "../../include/io/DatasetReader.hpp"
 #include "../../include/util/String.hpp"
@@ -8,9 +8,11 @@
 #include <unordered_map>
 #include <stdexcept>
 
-std::vector<RawRecord> DatasetReader::read_credit_card_dataset(const std::string& path) {
-    std::ifstream in(path);
-    if (!in) throw std::runtime_error("Cannot open dataset file: " + path);
+namespace fd::io {
+
+std::vector<RawRecord> read_credit_card_dataset(std::string_view path) {
+    std::ifstream in{std::string(path)};
+    if (!in) throw std::runtime_error(std::string("Cannot open dataset file: ") + std::string(path));
 
     std::vector<RawRecord> out;
     out.reserve(200000);
@@ -25,7 +27,7 @@ std::vector<RawRecord> DatasetReader::read_credit_card_dataset(const std::string
         const std::size_t first_comma = line.find(',');
         if (first_comma == std::string::npos) continue;
 
-        const std::string entity_id = trim_copy(line.substr(0, first_comma));
+        const std::string entity_id = fd::util::trim_copy(line.substr(0, first_comma));
         const std::string record    = line.substr(first_comma + 1);
 
         std::size_t key;
@@ -40,6 +42,8 @@ std::vector<RawRecord> DatasetReader::read_credit_card_dataset(const std::string
         out.push_back(RawRecord{key, record});
     }
 
-    if (out.empty()) throw std::runtime_error("Dataset is empty or malformed: " + path);
+    if (out.empty()) throw std::runtime_error(std::string("Dataset is empty or malformed: ") + std::string(path));
     return out;
+}
+
 }

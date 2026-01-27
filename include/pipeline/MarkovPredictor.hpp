@@ -1,5 +1,5 @@
 //
-// Created by Carlos Villacañas Iglesias.
+// Created by Carlos Villacañas.
 //
 
 #pragma once
@@ -13,6 +13,8 @@
 #include "../model/OutlierScorer.hpp"
 #include "Event.hpp"
 
+namespace fd::pipeline {
+
 struct PredictorStats {
     std::uint64_t events = 0;
     std::uint64_t windows_full = 0;
@@ -24,8 +26,10 @@ struct PredictorStats {
 
 class MarkovPredictor {
 public:
-    MarkovPredictor(const MarkovModel& model,
+    MarkovPredictor(const fd::model::MarkovModel& model,
                     std::size_t window_size,
+                    int state_position,
+                    fd::model::ScoreType score_type,
                     double threshold);
 
     // Returns true if event is an outlier (and sets event.score).
@@ -33,8 +37,10 @@ public:
     const PredictorStats& stats() const { return stats_; }
 
 private:
-    const MarkovModel& model_;
+    const fd::model::MarkovModel& model_;
     std::size_t W_;
+    int statepos_;
+    fd::model::ScoreType type_;
     double threshold_;
 
     std::unordered_map<std::size_t, std::deque<std::string>> windows_;
@@ -43,3 +49,5 @@ private:
                               std::vector<std::size_t>& out_idx) const;
     PredictorStats stats_;
 };
+
+}

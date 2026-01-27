@@ -1,11 +1,13 @@
 //
-// Created by Carlos Villacañas Iglesias.
+// Created by Carlos Villacañas.
 //
 
 #pragma once
 
 #include <vector>
 #include <cstdint>
+
+namespace fd::util {
 
 struct LatencyStats {
     double mean_ms = 0.0;
@@ -16,3 +18,5 @@ struct LatencyStats {
 
 // Computes stats from latencies (ns). It sorts internally.
 LatencyStats compute_latency_stats_ms(std::vector<std::uint64_t> latencies_ns);
+
+}
