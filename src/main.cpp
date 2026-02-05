@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
 
         fd::model::MarkovModel model = fd::io::read_model_txt(cfg.model_path);
         auto data = fd::io::read_credit_card_dataset(cfg.input_path);
-
+        const auto t0 = std::chrono::steady_clock::now();
         constexpr int kStatePos = 1; // dataset format: id, something, STATE
         fd::pipeline::MarkovPredictor predictor(model, cfg.window, kStatePos, cfg.score_type, cfg.threshold);
 
@@ -93,9 +93,15 @@ int main(int argc, char** argv) {
         }
 
         const auto st = sink.final_stats_ms();
+        const auto t1 = std::chrono::steady_clock::now();
+        const double seconds = std::chrono::duration<double>(t1 - t0).count();
 
         std::cout << "Done.\n";
         std::cout << "Total events: " << total << "\n";
+        std::cout << "Total time (s): " << seconds << "\n";
+        if (seconds > 0.0) {
+            std::cout << "Throughput (events/s): " << (static_cast<double>(total) / seconds) << "\n";
+        }
         std::cout << "Outliers: " << sink.outliers() << "\n";
         std::cout << "Latency mean (ms): " << st.mean_ms << "\n";
         std::cout << "Latency p50  (ms): " << st.p50_ms << "\n";

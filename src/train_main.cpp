@@ -1,6 +1,7 @@
 //
 // Created by Carlos Villacañas.
 //
+#include <chrono>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -9,10 +10,6 @@
 
 #include "training/MarkovTrainer.hpp"
 #include "io/ModelWriter.hpp"
-
-
-
-
 
 static void print_usage(const char* prog) {
     std::cerr
@@ -27,12 +24,10 @@ int main(int argc, char** argv) {
         std::string input_path;
         std::string output_path;
 
-        constexpr int kStatePos = 1;              // default to match the common setup
-        double alpha = 0.0;             // Laplace smoothing (0 = none)
-        bool uniform_dead_end = true;   // if a row has no transitions, use uniform probabilities
-        std::optional<std::string> fixed_order_from;
+        constexpr int kStatePos = 1;
+        double alpha = 0.0;
+        bool uniform_dead_end = true;
 
-        // Very small CLI parser.
         for (int i = 1; i < argc; ++i) {
             const std::string a = argv[i];
 
@@ -50,13 +45,11 @@ int main(int argc, char** argv) {
                 input_path = need_value(a);
             } else if (a == "--output") {
                 output_path = need_value(a);
-
             } else if (a == "--alpha") {
                 alpha = std::stod(need_value(a));
                 if (alpha < 0.0) {
                     throw std::runtime_error("--alpha must be >= 0");
                 }
-
             } else if (a == "--no-uniform-dead-end") {
                 uniform_dead_end = false;
             } else {
@@ -73,10 +66,14 @@ int main(int argc, char** argv) {
         opt.alpha = alpha;
         opt.uniform_if_dead_end = uniform_dead_end;
 
-
-
         fd::training::TrainingReport rep;
-        fd::model::MarkovModel model = fd::training::train_from_dataset(input_path, kStatePos, opt, &rep);
+
+        const auto t0 = std::chrono::steady_clock::now();
+        fd::model::MarkovModel model =
+                fd::training::train_from_dataset(input_path, kStatePos, opt, &rep);
+        const auto t1 = std::chrono::steady_clock::now();
+
+        const double seconds = std::chrono::duration<double>(t1 - t0).count();
 
         std::ofstream out(output_path);
         if (!out) {
@@ -84,7 +81,6 @@ int main(int argc, char** argv) {
         }
         fd::io::write_model_txt(out, model);
 
-        // Simple training summary
         std::cout << "Training done.\n";
         std::cout << "States: " << model.size() << "\n";
         std::cout << "Lines read: " << rep.lines_read << "\n";
@@ -92,6 +88,12 @@ int main(int argc, char** argv) {
         std::cout << "Transitions counted: " << rep.transitions_counted << "\n";
         std::cout << "Unknown states skipped: " << rep.unknown_states_skipped << "\n";
         std::cout << "Output: " << output_path << "\n";
+
+        std::cout << "Training time (s): " << seconds << "\n";
+        if (seconds > 0.0) {
+            std::cout << "Training throughput (lines/s): "
+                      << (static_cast<double>(rep.lines_read) / seconds) << "\n";
+        }
 
         return 0;
     } catch (const std::exception& e) {
