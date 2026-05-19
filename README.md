@@ -4,7 +4,13 @@ This repository contains the implementation developed for the Bachelor's Thesis 
 
 The project implements a credit card fraud detection pipeline in modern C++. The application is based on a sequence model: historical transaction data are used to train a Markov-style transition model, and new transaction sequences are later scored using sliding windows per entity.
 
-The main objective of the project is not to propose a new fraud detection model, but to improve the structure and performance of the software implementation. The final version includes both a sequential backend and a parallel backend based on Intel oneAPI Threading Building Blocks.
+The starting point of the project was the original **WindFlow FraudDetection** implementation from the StreamBenchmarks repository:
+
+https://github.com/ParaGroup/StreamBenchmarks/tree/master/WindFlow/FraudDetection
+
+That implementation was used as a reference to understand the general fraud detection pipeline and its relation to stream processing benchmarks. The code in this repository is not a direct copy of the WindFlow implementation. It is a standalone C++ implementation developed for this thesis, with a redesigned project structure, explicit model input/output, benchmarking support, and both sequential and Intel oneAPI TBB-based execution backends.
+
+The main objective of the project is not to propose a new fraud detection model, but to improve the structure and performance of the software implementation.
 
 ## Project Structure
 
